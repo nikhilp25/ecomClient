@@ -1,6 +1,61 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { removeItem } from "../utils/cartSlice";
+import axios from "axios";
 
 function Checkout() {
+  const prdData = useSelector((state) => state.cart.items);
+  const dispatch = useDispatch();
+  const handleRemove = (data) => {
+    dispatch(removeItem(data));
+  };
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [address, setAddress] = useState("");
+  const [address2, setAddress2] = useState("");
+  const [city, setCity] = useState("");
+  const [country, setCountry] = useState("");
+  const [city1, setCity1] = useState("");
+  const [zipCode, setZipCode] = useState("");
+  const [mobileNo, setMobileNo] = useState("");
+  const [grandTotal, setGrandTotal] = useState(0);
+  const handlePayment = async (e) => {
+    e.preventDefault();
+    const userAddress = {
+      addressLine1: address,
+      addressLine2: address2,
+      city: city,
+      country: country,
+      city1,
+      postalCode: zipCode,
+      telephoneNo: mobileNo,
+      mobileNo: mobileNo,
+    };
+
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: { Authorization: `Bearer  ${token}` },
+    };
+
+    const resp = await axios
+      .post(
+        "http://localhost:8000/api/v1/user/userAddress",
+        userAddress,
+        config
+      )
+      .then(console.log)
+      .catch(console.log);
+  };
+  const getTotal = () => {
+    let total = 0;
+    prdData.map((data) => {
+      return (total += data.price);
+    });
+    setGrandTotal(total);
+  };
+  useEffect(() => {
+    getTotal();
+  }, [prdData]);
   return (
     <div className="checkout-page">
       <div className="checkout-container">
@@ -12,58 +67,100 @@ function Checkout() {
             <span className="step">Payment</span>
           </div>
           <h3>Shipping Information</h3>
-          <form>
-            <input type="text" placeholder="First Name" />
-            <input type="text" placeholder="Last Name" />
-            <input type="text" placeholder="Address" />
-            <input type="text" placeholder="Apartment, suite, etc (optional)" />
-            <input type="text" placeholder="City" />
+          <form onSubmit={handlePayment}>
+            <input
+              type="text"
+              placeholder="First Name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Last Name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              required
+            />
+            <input
+              type="text"
+              placeholder="Apartment, suite, etc (mobileNo)"
+              value={address2}
+              onChange={(e) => setAddress2(e.target.value)}
+            />
+            <input
+              type="text"
+              placeholder="City"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              required
+            />
             <div className="country-city-zip">
-              <input type="text" placeholder="Country" />
-              <input type="text" placeholder="City" />
-              <input type="text" placeholder="Zipcode" />
+              <input
+                type="text"
+                placeholder="Country"
+                value={country}
+                onChange={(e) => setCountry(e.target.value)}
+                required
+              />
+              <input
+                type="text"
+                placeholder="City"
+                value={city1}
+                onChange={(e) => setCity1(e.target.value)}
+                required
+              />
+              <input
+                type="text"
+                placeholder="Zipcode"
+                value={zipCode}
+                onChange={(e) => setZipCode(e.target.value)}
+                required
+              />
             </div>
-            <input type="text" placeholder="Optional" />
+            <input
+              type="text"
+              placeholder="mobileNo"
+              value={mobileNo}
+              onChange={(e) => setMobileNo(e.target.value)}
+              required
+            />
             <label>
               <input type="checkbox" />
               Save contact information
             </label>
-            <button type="submit">Continue to shipping</button>
+            <button type="submit">Continue to Payment</button>
           </form>
         </div>
 
         <div className="cart-summary">
           <h3>Your cart</h3>
-          <div className="cart-item">
-            <div className="item-details">
-              <div className="item-image"></div>
-              <div>
-                <p>Men’s winter jacket</p>
-                <p>Size: L</p>
-                <p>Quantity: 1</p>
-                <p>$99</p>
-                <a href="/">Remove</a>
+          {prdData.map((data) => {
+            return (
+              <div className="cart-item">
+                <div className="item-details">
+                  <div className="item-image"></div>
+                  <div>
+                    <p>{data.desc}</p>
+                    <p>{data.name}</p>
+                    <p>${data.price}</p>
+                  </div>
+                  <button onClick={() => handleRemove(data)}>Remove</button>
+                </div>
               </div>
-            </div>
-          </div>
-          <div className="cart-item">
-            <div className="item-details">
-              <div className="item-image"></div>
-              <div>
-                <p>Men’s winter jacket</p>
-                <p>Size: L</p>
-                <p>Quantity: 1</p>
-                <p>$99</p>
-                <a href="/">Remove</a>
-              </div>
-            </div>
-          </div>
+            );
+          })}
           <div className="cart-totals">
             <input type="text" placeholder="Enter coupon code here" />
             <div className="totals">
-              <p>Subtotal: $200</p>
-              <p>Shipping: Calculated at the next step</p>
-              <p>Total: $200</p>
+              <p>Total: ${grandTotal}</p>
             </div>
           </div>
         </div>

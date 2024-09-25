@@ -20,7 +20,7 @@ function Product() {
   const dispatch = useDispatch();
   let handleAddCart = (data) => {
     console.log(data);
-    dispatch(addItem());
+    dispatch(addItem(data));
   };
   return (
     <div>

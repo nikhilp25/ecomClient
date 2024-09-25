@@ -1,6 +1,27 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { removeItem } from "../utils/cartSlice";
+import { useNavigate } from "react-router-dom";
 
 function Cart() {
+  const [grandTotal, setGrandTotal] = useState(0);
+  const navigate = useNavigate();
+  const prdData = useSelector((state) => state.cart.items);
+  const getTotal = () => {
+    let total = 0;
+    prdData.map((data) => {
+      return (total += data.price);
+    });
+    setGrandTotal(total);
+  };
+  useEffect(() => {
+    getTotal();
+  }, [prdData]);
+
+  const dispatch = useDispatch();
+  const handleRemove = (data) => {
+    dispatch(removeItem(data));
+  };
   return (
     <div className="cart-page">
       <div className="cart-items">
@@ -8,32 +29,19 @@ function Cart() {
         <p>
           Not ready to checkout? <a href="/">Continue Shopping</a>
         </p>
-
-        <div className="cart-item">
-          <div className="cart-item-image"></div>
-          <div className="cart-item-details">
-            <p>Men's winter jacket</p>
-            <p>Size: L</p>
-            <p>Quantity: 1</p>
-            <p>$99</p>
-            <a href="/" className="remove-item">
-              Remove
-            </a>
-          </div>
-        </div>
-
-        <div className="cart-item">
-          <div className="cart-item-image"></div>
-          <div className="cart-item-details">
-            <p>Men's winter jacket</p>
-            <p>Size: L</p>
-            <p>Quantity: 1</p>
-            <p>$99</p>
-            <a href="/" className="remove-item">
-              Remove
-            </a>
-          </div>
-        </div>
+        {prdData.map((data) => {
+          return (
+            <div key={data.id * Math.random()} className="cart-item">
+              <div className="cart-item-image"></div>
+              <div className="cart-item-details">
+                <p>{data.desc}</p>
+                <p>{data.name}</p>
+                <p>${data.price}</p>
+                <button onClick={() => handleRemove(data)}>Remove</button>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="order-summary">
@@ -41,16 +49,16 @@ function Cart() {
         <input type="text" placeholder="Enter coupon code here" />
         <div className="summary-details">
           <p>
-            Subtotal: <span>$200</span>
-          </p>
-          <p>
-            Shipping: <span>Calculated at the next step</span>
-          </p>
-          <p>
-            Total: <span>$200</span>
+            Total: <span>${grandTotal}</span>
           </p>
         </div>
-        <button>Continue to checkout</button>
+        <button
+          onClick={() => {
+            navigate("/checkout");
+          }}
+        >
+          Continue to checkout
+        </button>
       </div>
 
       <div className="order-information">
