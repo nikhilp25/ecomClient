@@ -1,9 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addItem } from "../utils/cartSlice";
 import axios from "axios";
 
 function Product() {
+  const userDetail = useSelector((store) => store.auth);
+  const isTokenExpired = () => {
+    const expirationTime = userDetail.user.createdAt;
+    const currentTime = new Date().getTime();
+    const timestamp = new Date(expirationTime).getTime();
+
+    return currentTime - timestamp < 3600000; // Returns true if the token is expired
+  };
+
+  const checkToken = () => {
+    if (isTokenExpired()) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("tokenExpiration");
+      console.log("Token expired and removed from localStorage");
+    }
+  };
   const fetchData = async () => {
     const resp = await axios.get(
       "http://localhost:8000/api/v1/product/getAllProducts"
@@ -14,6 +30,7 @@ function Product() {
 
   useEffect(() => {
     fetchData();
+    // checkToken();
   }, []);
 
   const [products, setProducts] = useState([]);

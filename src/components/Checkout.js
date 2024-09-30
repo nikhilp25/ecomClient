@@ -2,10 +2,12 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { removeItem } from "../utils/cartSlice";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function Checkout() {
   const prdData = useSelector((state) => state.cart.items);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const handleRemove = (data) => {
     dispatch(removeItem(data));
   };
@@ -36,21 +38,45 @@ function Checkout() {
     const config = {
       headers: { Authorization: `Bearer  ${token}` },
     };
+    const cartItem = getCartData();
 
-    const resp = await axios
-      .post(
+    const resp = await Promise.all([
+      await axios.post(
         "http://localhost:8000/api/v1/user/userAddress",
         userAddress,
         config
-      )
-      .then(console.log)
-      .catch(console.log);
+      ),
+      await axios.post(
+        "http://localhost:8000/api/v1/payment/checkout",
+        cartItem,
+        config
+      ),
+    ]);
+    console.log(resp);
+    const paymentURL = resp[1].data.url;
+    console.log(paymentURL);
+    window.location = paymentURL;
+  };
+  const getCartData = () => {
+    let cartItem = [];
+    prdData.map((data) => {
+      const obj = {
+        name: data.name,
+        price: data.price,
+        quantity: data.SKU,
+      };
+      cartItem.push(obj);
+    });
+    console.log({ cartItem: cartItem });
+    return cartItem;
   };
   const getTotal = () => {
     let total = 0;
     prdData.map((data) => {
       return (total += data.price);
     });
+    console.log(prdData);
+
     setGrandTotal(total);
   };
   useEffect(() => {
